@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Claudsito Tamagochi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#14162b">
+<meta name="description" content="Cuida a Claudsito: dale de comer, juega a cazar bugs, límpialo y velo crecer.">
+<link rel="manifest" href="manifest.webmanifest" data-repo-only>
+<link rel="icon" type="image/png" href="icons/icon-192.png" data-repo-only>
+<link rel="apple-touch-icon" href="icons/icon-180.png" data-repo-only>
+<meta name="apple-mobile-web-app-capable" content="yes" data-repo-only>
+<meta name="apple-mobile-web-app-title" content="Claudsito" data-repo-only>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<style>
+/* Layout: one handheld toy on a dotted desk. Screen first, then the five meters, then a 3x2 keypad. */
+:root {
+  --desk: #14162b;
+  --desk-dot: #232650;
+  --shell: #3a3f86;
+  --shell-hi: #5a61b4;
+  --shell-lo: #252960;
+  --screen: #0b0d12;
+  --screen-grid: #1a1e2b;
+  --clay: #d97757;
+  --amber: #f2b25c;
+  --danger: #ef5b52;
+  --ink: #eef0ff;
+  --ink-dim: #a9aee0;
+  --key: #dfe0f7;
+  --key-ink: #1d2050;
+  --key-lo: #8f92c9;
+  --font-display: "Silkscreen", "Courier New", monospace;
+  --font-term: "VT323", "Courier New", monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--desk) radial-gradient(var(--desk-dot) 1px, transparent 1.6px) 0 0 / 14px 14px;
+  color: var(--ink);
+  font-family: var(--font-term);
+  font-size: 18px;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+.app {
+  min-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-block: 12px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.device {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 14px 22px;
+  border-radius: 28px 28px 48px 48px;
+  background: linear-gradient(160deg, var(--shell-hi), var(--shell) 38%, var(--shell-lo));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .18), inset 0 -5px 0 rgba(0, 0, 0, .25), 0 20px 44px rgba(0, 0, 0, .5);
+}
+
+/* header */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.name, .name-input {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 0;
+}
+.name {
+  flex: 1 1 auto;
+  appearance: none; border: 0; background: none; padding: 2px 4px; margin-left: -4px;
+  cursor: pointer; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.name::after { content: " ✎"; font-size: 12px; color: var(--ink-dim); }
+.name-input {
+  width: 9em; background: var(--screen); border: 2px solid var(--amber); border-radius: 6px; padding: 2px 6px;
+}
+.top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.chip {
+  font-family: var(--font-display);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink);
+  background: var(--shell-lo);
+  border-radius: 999px;
+  padding: 5px 10px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mini {
+  appearance: none; border: 0; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--shell-lo); display: grid; place-items: center; padding: 0;
+}
+.mini canvas { width: 18px; height: 15px; image-rendering: pixelated; }
+
+/* screen */
+.bezel {
+  background: var(--shell-lo);
+  border-radius: 16px;
+  padding: 10px 10px 8px;
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, .55);
+}
+#screen {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 6px;
+  background: var(--screen);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.term {
+  margin: 0;
+  padding: 7px 4px 0;
+  min-height: 2.2em;
+  font-family: var(--font-term);
+  font-size: 21px;
+  line-height: 1.05;
+  color: var(--amber);
+  overflow-wrap: anywhere;
+}
+.prompt { color: var(--clay); }
+.cursor { display: inline-block; width: .5em; height: .9em; margin-left: 2px; vertical-align: -1px; background: var(--amber); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* meters */
+.meters { display: grid; gap: 7px; padding: 0 2px; }
+.meter {
+  display: grid;
+  grid-template-columns: 5.4em 1fr 2.2em;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.bar { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; height: 12px; }
+.bar i { background: var(--shell-lo); border-radius: 1px; }
+.bar i.on { background: var(--clay); }
+.meter.low .bar i.on { background: var(--danger); }
+.meter.low .label { color: var(--danger); }
+.meter .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-dim); }
+
+/* keypad */
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding-top: 4px; }
+.key {
+  position: relative;
+  appearance: none; border: 0; cursor: pointer;
+  min-height: 62px;
+  padding: 8px 4px 7px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  background: var(--key);
+  color: var(--key-ink);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: .03em;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--key-lo);
+  touch-action: manipulation;
+  transition: transform .06s, box-shadow .06s;
+}
+.key:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--key-lo); }
+.key:disabled { opacity: .4; cursor: default; }
+.key:focus-visible, .mini:focus-visible, .name:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.key canvas { width: 24px; height: 24px; image-rendering: pixelated; }
+.key.attn::after {
+  content: ""; position: absolute; top: 7px; right: 8px; width: 7px; height: 7px;
+  background: var(--danger); animation: blink .8s steps(1) infinite;
+}
+.key.wide { grid-column: 1 / -1; font-size: 13px; }
+
+/* manual sheet */
+.sheet {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(8, 9, 20, .82);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-top: max(24px, env(safe-area-inset-top, 0px));
+}
+.sheet-card {
+  width: 100%; max-width: 460px; max-height: 88%; overflow-y: auto; box-sizing: border-box;
+  background: var(--screen);
+  border-radius: 18px 18px 0 0;
+  padding-block: 18px max(22px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  font-family: var(--font-term);
+  font-size: 20px;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--font-display); font-size: 12px; color: var(--ink-dim); letter-spacing: .06em; }
+.sheet h2 { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--clay); text-transform: uppercase; letter-spacing: .08em; margin: 18px 0 4px; }
+.sheet p, .sheet ul { margin: 0; max-width: 60ch; }
+.sheet ul { padding-left: 1.1em; display: grid; gap: 3px; }
+.sheet b { color: var(--amber); font-weight: 400; }
+.close {
+  appearance: none; border: 0; cursor: pointer; background: var(--key); color: var(--key-ink);
+  font-family: var(--font-display); font-size: 11px; border-radius: 10px; padding: 8px 12px; box-shadow: 0 3px 0 var(--key-lo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor, .key.attn::after { animation: none; }
+  .key { transition: none; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="device">
+    <header class="top">
+      <button id="name-btn" class="name" type="button" aria-label="Cambiar nombre"><span id="name-text">Claudsito</span></button>
+      <input id="name-input" class="name-input" maxlength="14" autocomplete="off" aria-label="Nombre de tu mascota" hidden>
+      <div class="top-right">
+        <span id="stage" class="chip">Huevo</span>
+        <button id="sound" class="mini" type="button" aria-label="Sonido" aria-pressed="true"><canvas id="sound-icon" width="18" height="15"></canvas></button>
+      </div>
+    </header>
+
+    <section class="bezel">
+      <canvas id="screen" aria-label="Pantalla. Toca a tu mascota para hacerle cariño."></canvas>
+      <p class="term" aria-hidden="true"><span class="prompt">~$ </span><span id="msg"></span><span class="cursor"></span></p>
+      <span id="msg-sr" class="sr" aria-live="polite"></span>
+    </section>
+
+    <section class="meters" id="meters" aria-label="Estado"></section>
+
+    <section class="keys" id="keys">
+      <button class="key" type="button" data-act="feed"><canvas data-icon="burger"></canvas>Comer</button>
+      <button class="key" type="button" data-act="play"><canvas data-icon="bugA"></canvas>Jugar</button>
+      <button class="key" type="button" data-act="sleep"><canvas data-icon="moon"></canvas><span id="sleep-label">Dormir</span></button>
+      <button class="key" type="button" data-act="clean"><canvas data-icon="drop"></canvas>Limpiar</button>
+      <button class="key" type="button" data-act="heal"><canvas data-icon="pill"></canvas>Curar</button>
+      <button class="key" type="button" data-act="help"><canvas data-icon="q"></canvas>Manual</button>
+    </section>
+    <section class="keys" id="food-keys" hidden>
+      <button class="key" type="button" data-act="meal"><canvas data-icon="burger"></canvas>Comida</button>
+      <button class="key" type="button" data-act="snack"><canvas data-icon="cookie"></canvas>Galleta</button>
+      <button class="key" type="button" data-act="back"><canvas data-icon="arrow"></canvas>Volver</button>
+    </section>
+    <section class="keys" id="reborn-keys" hidden>
+      <button class="key wide" type="button" data-act="reborn"><canvas data-icon="egg"></canvas>Nuevo huevo</button>
+    </section>
+  </div>
+</main>
+
+<div class="sheet" id="help" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="sheet-head"><span id="help-title">CLAUDSITO(1) · MANUAL</span><button class="close" type="button" id="help-close">Cerrar</button></div>
+    <h2>Lo básico</h2>
+    <p>Claudsito vive en tu cel. Sus barras bajan con el tiempo real, <b>aunque cierres la app</b>. Si una barra se pone roja, te está pidiendo algo. Tócalo en la pantalla para hacerle cariño.</p>
+    <h2>Barras</h2>
+    <ul>
+      <li><b>Panza</b>: se vacía en unas 6 horas.</li>
+      <li><b>Ánimo</b>: baja en unas 5 horas. Súbelo jugando o con cariño.</li>
+      <li><b>Energía</b>: dura unas 12 horas despierto. Si llega a 0 se duerme donde sea.</li>
+      <li><b>Higiene</b>: baja más rápido con cada popó en el piso.</li>
+      <li><b>Salud</b>: baja si está enfermo o si alguna barra está en 0. Se recupera sola cuando está bien cuidado.</li>
+    </ul>
+    <h2>Botones</h2>
+    <ul>
+      <li><b>Comer</b>: Comida llena la panza y al rato hace popó. Galleta lo pone feliz, pero 3 galletas en una hora lo pueden enfermar.</li>
+      <li><b>Jugar</b>: minijuego de 20 segundos. Toca los bugs antes de que se escapen. Cada bug sube el ánimo. Cansa y da hambre.</li>
+      <li><b>Dormir</b>: apaga la luz y recarga energía. Se despierta solo cuando tiene la pila llena.</li>
+      <li><b>Limpiar</b>: quita las popós. Si se juntan, se puede enfermar.</li>
+      <li><b>Curar</b>: medicina para cuando sale la calavera.</li>
+    </ul>
+    <h2>Crecimiento</h2>
+    <p>Huevo (1 min) → Bebé (1 hora) → Chamaco (1 día) → Adulto. Cada vez que dejas una barra llegar a 0 cuenta como descuido. Con 3 descuidos o menos crece como <b>Claudsito Pro</b>, con audífonos. Con más, sale <b>Desvelado</b>, con ojeras.</p>
+    <h2>Si lo descuidas</h2>
+    <p>Si la salud llega a 0, Claudsito se va a la nube. Puedes empezar con un huevo nuevo.</p>
+    <p id="best-line" style="margin-top:14px;color:var(--ink-dim)"></p>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- setup ---------- */
+const $ = s => document.querySelector(s);
+const css = getComputedStyle(document.documentElement);
+const v = n => css.getPropertyValue(n).trim();
+const C = {
+  clay: v('--clay'), amber: v('--amber'), danger: v('--danger'), screen: v('--screen'),
+  grid: v('--screen-grid'), ink: v('--ink'), dim: v('--ink-dim'), keyInk: v('--key-ink'),
+  eye: '#1a1410', sick: '#b4a75a', ghost: '#9aa0cf', tired: '#b9634a', bag: '#6e3528',
+  poop: '#8a5530', bug: '#8bd06f', bugDark: '#335f2a', heart: '#ff5f6d',
+  bun: '#e0a256', lettuce: '#7cc36a', meat: '#6b3a22', cookie: '#d9a35b', chip: '#5a3418',
+  shell: '#ece6da', pill: '#f4f4f4', phones: '#2a2c44', phonesHi: '#7a80c8',
+  bubble: '#8fd3ff', halo: '#f2d45c', blue: '#3b7fd0'
+};
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const W = 96, H = 64, FLOOR = 57, SCALE = 6;
+const cv = $('#screen');
+const ctx = cv.getContext('2d');
+cv.width = W * SCALE; cv.height = H * SCALE;
+ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+ctx.imageSmoothingEnabled = false;
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ---------- pixel sprites ---------- */
+const sp = (rows, map) => ({ rows, map, w: rows[0].length, h: rows.length });
+const SP = {
+  heart: sp(['XX.XX', 'XXXXX', '.XXX.', '..X..'], { X: C.heart }),
+  poop: sp(['..X..', '.XX..', '.XXX.', 'XXXXX'], { X: C.poop }),
+  bugA: sp(['X...X', '.XXX.', 'XOXOX', '.X.X.'], { X: C.bug, O: C.bugDark }),
+  bugB: sp(['.X.X.', '.XXX.', 'XOXOX', 'X...X'], { X: C.bug, O: C.bugDark }),
+  burger: sp(['.BBBB.', 'BBBBBB', 'LLLLLL', 'MMMMMM', 'BBBBBB'], { B: C.bun, L: C.lettuce, M: C.meat }),
+  cookie: sp(['.XXX.', 'XCXXX', 'XXXCX', 'XCXXX', '.XXX.'], { X: C.cookie, C: C.chip }),
+  pill: sp(['.RRWW.', 'RRRWWW', '.RRWW.'], { R: C.danger, W: C.pill }),
+  z: sp(['XXXX', '..X.', '.X..', 'XXXX'], { X: C.dim }),
+  skull: sp(['.XXX.', 'X.X.X', 'XXXXX', '.X.X.'], { X: C.ink }),
+  bubble: sp(['.X.', 'X.X', '.X.'], { X: C.bubble }),
+  spark: sp(['.X.', 'XAX', '.X.'], { X: C.amber, A: C.ink }),
+  bang: sp(['X', 'X', 'X', '.', 'X'], { X: C.amber }),
+  egg: sp(['..XX..', '.XXXX.', '.XOXX.', 'XXXXXX', 'XXXXOX', 'XOXXXX', 'XXXXXX', '.XXOX.', '..XX..'], { X: C.shell, O: C.clay }),
+  /* key icons (drawn on light keys) */
+  moon: sp(['.XXX', 'XX..', 'XX..', 'XX..', '.XXX'], { X: C.keyInk }),
+  drop: sp(['..X..', '.XXX.', 'XXXXX', 'XXXXX', '.XXX.'], { X: C.blue }),
+  q: sp(['.XXX.', 'X...X', '...X.', '..X..', '.....', '..X..'], { X: C.keyInk }),
+  arrow: sp(['..X..', '.X...', 'XXXXX', '.X...', '..X..'], { X: C.keyInk }),
+  spk: sp(['...X..', '.XXX.X', 'XXXX..', '.XXX.X', '...X..'], { X: C.ink }),
+  spkOff: sp(['...X..', '.XXX..', 'XXXX.X', '.XXX..', '...X..'], { X: C.dim })
+};
+const PET = {
+  big: {
+    body: ['..XXXXXXXXXX..', '..XXXXXXXXXX..', '..XXXXXXXXXX..', 'XXXXXXXXXXXXXX', 'XXXXXXXXXXXXXX', '..XXXXXXXXXX..', '..XXXXXXXXXX..'],
+    eyes: [4, 9], eyeRow: 1, mouth: [6, 7], mouthRow: 4, legs: [2, 4, 9, 11], legLen: 2
+  },
+  baby: {
+    body: ['.XXXXXXXX.', '.XXXXXXXX.', 'XXXXXXXXXX', '.XXXXXXXX.'],
+    eyes: [3, 6], eyeRow: 0, mouth: [4, 5], mouthRow: 2, legs: [1, 3, 6, 8], legLen: 1
+  }
+};
+
+function drawSprite(s, x, y, scale = 1, skipCols = 0) {
+  x = Math.round(x); y = Math.round(y);
+  for (let r = 0; r < s.h; r++) {
+    for (let c = skipCols; c < s.w; c++) {
+      const ch = s.rows[r][c];
+      if (ch === '.') continue;
+      ctx.fillStyle = s.map[ch];
+      ctx.fillRect(x + c * scale, y + r * scale, scale, scale);
+    }
+  }
+}
+
+function iconCanvas(el, s, px = 24) {
+  const dpr = Math.max(2, Math.round(devicePixelRatio || 1));
+  el.width = px * dpr; el.height = Math.round(px * (el.clientHeight / el.clientWidth || 1)) * dpr;
+  const g = el.getContext('2d');
+  g.clearRect(0, 0, el.width, el.height);
+  const unit = Math.floor(Math.min(el.width / s.w, el.height / s.h));
+  const ox = Math.floor((el.width - s.w * unit) / 2), oy = Math.floor((el.height - s.h * unit) / 2);
+  for (let r = 0; r < s.h; r++) for (let c = 0; c < s.w; c++) {
+    const ch = s.rows[r][c];
+    if (ch === '.') continue;
+    g.fillStyle = s.map[ch];
+    g.fillRect(ox + c * unit, oy + r * unit, unit, unit);
+  }
+}
+
+/* ---------- state ---------- */
+const KEY = 'claudsito.v1';
+const EGG_MS = 60e3, BABY_MS = 3600e3, KID_MS = 86400e3;
+function fresh(now = Date.now()) {
+  return {
+    v: 1, name: 'Claudsito', born: now, lastTick: now, stage: 'egg',
+    hunger: 70, happy: 70, energy: 90, hygiene: 100, health: 100,
+    poops: 0, nextPoop: null, sick: false, asleep: false, dead: false, diedAt: null,
+    mistakes: 0, flags: {}, sweets: [], form: null, best: 0, muted: false
+  };
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && o.v === 1) return Object.assign(fresh(), o);
+    }
+  } catch (e) { /* storage unavailable: start fresh */ }
+  return fresh();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+
+let S = load();
+const U = { px: W / 2, target: W / 2, pause: 1, anim: null, animUntil: 0, food: null, particles: [], box: null, lastPet: 0, menu: null, needs: [], wobbleUntil: 0, zNext: 0, lastSay: 0 };
+const G = { on: false };
+
+function stageOf(t = Date.now()) {
+  const age = (S.dead ? S.diedAt : t) - S.born;
+  if (age < EGG_MS) return 'egg';
+  if (age < BABY_MS) return 'baby';
+  if (age < KID_MS) return 'kid';
+  return 'adult';
+}
+const STAGE_NAME = { egg: 'Huevo', baby: 'Bebé', kid: 'Chamaco', adult: 'Adulto' };
+
+/* ---------- simulation (rates per minute) ---------- */
+function mistake(k) { S.flags[k] = true; S.mistakes++; }
+function clampStats() { for (const k of ['hunger', 'happy', 'energy', 'hygiene', 'health']) S[k] = clamp(S[k], 0, 100); }
+
+function step(dt, t, events) {
+  if (S.dead || t - S.born < EGG_MS) return;
+  if (S.asleep) { S.energy += 0.9 * dt; S.hunger -= 0.12 * dt; S.happy -= 0.04 * dt; }
+  else { S.hunger -= 0.28 * dt; S.happy -= 0.33 * dt; S.energy -= 0.14 * dt; }
+  S.hygiene -= (0.04 + 0.12 * S.poops) * dt;
+  if (S.nextPoop && t >= S.nextPoop) {
+    S.poops = Math.min(4, S.poops + 1); S.hygiene -= 12; S.nextPoop = null; events.push('poop');
+  }
+  clampStats();
+  if (!S.asleep && S.energy <= 0) { S.asleep = true; mistake('energy'); events.push('collapse'); }
+  if (S.asleep && S.energy >= 100) { S.asleep = false; events.push('wake'); }
+  if (!S.sick) {
+    let risk = 0;
+    if (S.hygiene < 25) risk += 0.006;
+    if (S.poops >= 3) risk += 0.006;
+    if (S.hunger <= 0) risk += 0.006;
+    if (risk && Math.random() < risk * dt) { S.sick = true; events.push('sick'); }
+  }
+  const zeros = [S.hunger, S.happy, S.hygiene].filter(x => x <= 0).length;
+  if (S.sick) S.health -= 0.12 * dt;
+  S.health -= 0.08 * zeros * dt;
+  if (!S.sick && zeros === 0 && S.hunger > 40) S.health += 0.1 * dt;
+  for (const k of ['hunger', 'happy', 'hygiene']) {
+    if (S[k] <= 0 && !S.flags[k]) mistake(k);
+    if (S[k] > 30) S.flags[k] = false;
+  }
+  clampStats();
+  if (S.health <= 0) { S.dead = true; S.diedAt = t; S.asleep = false; S.sick = false; events.push('dead'); }
+}
+
+function advance(now) {
+  const events = [];
+  let t = S.lastTick;
+  let mins = (now - t) / 60000;
+  if (mins > 4320) { t = now - 4320 * 60000; mins = 4320; } // catch up 3 days at most
+  while (mins > 1) { t += 60000; step(1, t, events); mins -= 1; }
+  if (mins > 0) step(mins, now, events);
+  S.lastTick = now;
+  const st = stageOf(now);
+  if (st !== S.stage) { events.push('stage:' + st); S.stage = st; }
+  if ((st === 'adult') && !S.form) S.form = S.mistakes <= 3 ? 'pro' : 'desvelado';
+  return events;
+}
+
+/* ---------- sound + haptics ---------- */
+let audio = null;
+function ensureAudio() {
+  if (audio || S.muted) return;
+  try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+}
+function beep(freq = 660, dur = 0.08, delay = 0) {
+  if (S.muted) return;
+  ensureAudio();
+  if (!audio) return;
+  try {
+    const o = audio.createOscillator(), g = audio.createGain();
+    const t0 = audio.currentTime + delay;
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.05, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(audio.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  } catch (e) { /* ignore */ }
+}
+const tune = notes => notes.forEach((f, i) => beep(f, 0.09, i * 0.1));
+function buzz(ms = 20) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* ignore */ } }
+
+/* ---------- terminal line ---------- */
+let typeTimer = null;
+function say(text) {
+  U.lastSay = Date.now();
+  const el = $('#msg');
+  $('#msg-sr').textContent = text;
+  clearInterval(typeTimer);
+  if (reduced) { el.textContent = text; return; }
+  let i = 0; el.textContent = '';
+  typeTimer = setInterval(() => { i++; el.textContent = text.slice(0, i); if (i >= text.length) clearInterval(typeTimer); }, 22);
+}
+const N = () => S.name;
+
+const CHATTER = [
+  () => 'compilando sueños...',
+  () => 'git commit -m "hoy fue buen día"',
+  () => '¿jugamos a cazar bugs?',
+  () => '0 errores, 0 warnings, puro amor',
+  () => 'npm install abrazos',
+  () => 'leyendo la documentación de las galletas',
+  () => 'qué onda, ¿todo bien?',
+  () => 'pensando... pensando... ya.',
+  () => `${N()} anda bien chido`,
+  () => 'refactorizando mi siesta'
+];
+const NEED_TEXT = {
+  sick: () => `${N()} se siente malito. Dale medicina.`,
+  poop: () => 'uy... huele raro por aquí. Toca Limpiar.',
+  hunger: () => `${N()} tiene hambre.`,
+  energy: () => `${N()} se está cayendo de sueño.`,
+  happy: () => `${N()} está aburrido. ¿Juegan?`,
+  hygiene: () => `${N()} necesita un bañito.`
+};
+function needs() {
+  if (S.dead || stageOf() === 'egg') return [];
+  const n = [];
+  if (S.sick) n.push('sick');
+  if (S.poops > 0) n.push('poop');
+  if (S.hunger < 25) n.push('hunger');
+  if (S.energy < 20 && !S.asleep) n.push('energy');
+  if (S.happy < 25) n.push('happy');
+  if (S.hygiene < 25 && S.poops === 0) n.push('hygiene');
+  return n;
+}
+
+function handleEvents(events, live) {
+  for (const e of events) {
+    if (e === 'dead') { say(`${N()} se fue a la nube. Vivió ${fmtAge(S.diedAt - S.born)}.`); tune([523, 392, 330, 262]); buzz(200); }
+    else if (!live) continue;
+    else if (e === 'poop') { say(`${N()} hizo popó. Toca Limpiar.`); beep(300, 0.12); }
+    else if (e === 'collapse') say(`${N()} se quedó dormido del cansancio.`);
+    else if (e === 'wake') { say(`¡${N()} despertó con la pila llena!`); tune([523, 659, 784]); }
+    else if (e === 'sick') { say(`${N()} se enfermó. Dale medicina.`); tune([392, 330]); buzz(80); }
+    else if (e === 'stage:baby') { say(`¡Nació ${N()}! Hola, mundo.`); tune([523, 659, 784, 1047]); burst('spark', 8); buzz(60); }
+    else if (e === 'stage:kid') { say(`${N()} ya es un chamaco.`); tune([523, 659, 784, 1047]); burst('spark', 8); }
+    else if (e === 'stage:adult') { say(S.form === 'pro' ? `${N()} creció y es todo un Pro.` : `${N()} creció... medio desvelado.`); tune([523, 659, 784, 1047]); burst('spark', 10); }
+  }
+}
+
+/* ---------- actions ---------- */
+function animate(name, ms) { U.anim = name; U.animUntil = performance.now() + ms; }
+function burst(kind, n) {
+  const cx = U.box ? U.box.x + U.box.w / 2 : W / 2, cy = U.box ? U.box.y : FLOOR - 20;
+  for (let i = 0; i < n; i++) U.particles.push({ kind, x: cx + rand(-14, 14), y: cy + rand(-4, 8), vx: rand(-6, 6), vy: rand(-16, -8), life: rand(0.8, 1.4) });
+}
+
+const ACTIONS = {
+  feed() { U.menu = 'food'; refreshUI(); },
+  back() { U.menu = null; refreshUI(); },
+  meal() {
+    U.menu = null;
+    if (S.hunger >= 95) { say(`${N()} ya está lleno. No quiere más.`); animate('sad', 900); beep(220, 0.1); return; }
+    S.hunger += 30; S.health += 2;
+    if (!S.nextPoop) S.nextPoop = Date.now() + rand(15, 35) * 60000;
+    U.food = { s: SP.burger, until: performance.now() + 2200, dur: 2200 };
+    animate('eat', 2200); say(pick(['ñam ñam ñam', '¡qué rica hamburguesa!', 'provecho, ' + N()])); tune([660, 880]);
+  },
+  snack() {
+    U.menu = null;
+    const now = Date.now();
+    S.sweets = S.sweets.filter(t => now - t < 3600e3); S.sweets.push(now);
+    S.hunger += 8; S.happy += 15;
+    U.food = { s: SP.cookie, until: performance.now() + 1600, dur: 1600 };
+    animate('eat', 1600); tune([784, 988]);
+    if (S.sweets.length >= 3 && !S.sick && Math.random() < 0.5) {
+      S.sick = true; say(`Demasiadas galletas... a ${N()} le dolió la panza.`); buzz(80);
+    } else say(S.sweets.length >= 3 ? 'galletita... pero ya van muchas, ¿eh?' : '¡galletita!');
+  },
+  play() {
+    if (S.sick) { say(`${N()} está malito. Primero cúralo.`); beep(220, 0.1); return; }
+    if (S.energy < 15) { say(`${N()} está muy cansado para jugar.`); beep(220, 0.1); return; }
+    startGame();
+  },
+  sleep() {
+    if (S.asleep) {
+      S.asleep = false;
+      if (S.energy < 50) { S.happy -= 5; say(`${N()} despertó de malas.`); } else say(`buenos días, ${N()}.`);
+      beep(660);
+    } else { S.asleep = true; say(`luces fuera. Dulces sueños, ${N()}.`); tune([660, 523, 392]); }
+  },
+  clean() {
+    const had = S.poops;
+    S.poops = 0; S.hygiene = 100; if (had) S.happy += 5;
+    for (let i = 0; i < 14; i++) U.particles.push({ kind: 'bubble', x: rand(4, W - 6), y: FLOOR - rand(0, 6), vx: rand(-3, 3), vy: rand(-18, -8), life: rand(0.7, 1.3) });
+    say(had ? `¡Limpiecito! ${N()} lo agradece.` : `${N()} quedó rechinando de limpio.`); tune([880, 1175]);
+  },
+  heal() {
+    if (!S.sick) { say(`${N()} no está enfermo. La medicina es para cuando sale la calavera.`); beep(220, 0.1); return; }
+    S.sick = false; S.health += 20; S.happy -= 5;
+    U.food = { s: SP.pill, until: performance.now() + 1400, dur: 1400 };
+    animate('eat', 1400); burst('spark', 6);
+    say(`guácala, sabe feo... pero ${N()} ya se siente mejor.`); tune([523, 784]);
+  },
+  help() {
+    $('#best-line').textContent = `Récord cazando bugs: ${S.best}. Descuidos hasta ahora: ${S.mistakes}.`;
+    $('#help').hidden = false; $('#help-close').focus();
+  },
+  reborn() {
+    S = Object.assign(fresh(), { name: S.name, muted: S.muted, best: S.best });
+    U.particles = []; U.menu = null; U.anim = null; U.food = null;
+    say('Un huevo nuevo. Tócalo, se mueve.'); tune([392, 523, 659]);
+  }
+};
+
+/* ---------- minigame: caza bugs ---------- */
+function startGame() {
+  const now = performance.now();
+  Object.assign(G, { on: true, t0: now, end: now + 20000, bugs: [], score: 0, next: now + 500 });
+  S.asleep = false;
+  say('¡Atrapa los bugs! Tócalos antes de que se escapen.');
+  refreshUI();
+}
+function updateGame(now, dt) {
+  if (now >= G.end) { endGame(); return; }
+  const prog = (now - G.t0) / 20000;
+  if (now >= G.next && G.bugs.length < 4) {
+    G.bugs.push({ x: rand(30, W - 10), y: rand(10, FLOOR - 10), vx: rand(-16, 16) * (1 + prog), vy: rand(-9, 9) * (1 + prog), born: now, life: rand(2400, 3200) - prog * 1000 });
+    G.next = now + rand(400, 850);
+  }
+  for (const b of G.bugs) {
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.x < 2 || b.x > W - 7) b.vx *= -1;
+    if (b.y < 9 || b.y > FLOOR - 6) b.vy *= -1;
+    b.x = clamp(b.x, 2, W - 7); b.y = clamp(b.y, 9, FLOOR - 6);
+  }
+  G.bugs = G.bugs.filter(b => now - b.born < b.life);
+}
+function endGame() {
+  G.on = false;
+  const gain = Math.min(40, 6 + G.score * 4);
+  S.happy += gain; S.energy -= 12; S.hunger -= 6; clampStats();
+  const record = G.score > S.best;
+  if (record) S.best = G.score;
+  say(G.score === 0 ? 'se escaparon todos... ¡otra vez será!' : `¡Cazaste ${G.score} bugs!${record ? ' Nuevo récord.' : ''} Ánimo +${gain}.`);
+  animate(G.score ? 'happy' : 'sad', 1500);
+  if (G.score) burst('heart', Math.min(8, 2 + G.score)); tune(G.score ? [523, 659, 784, 1047] : [330, 262]);
+  save(); refreshUI();
+}
+
+/* ---------- input ---------- */
+cv.addEventListener('pointerdown', e => {
+  ensureAudio();
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+  if (G.on) {
+    let best = null, bd = 11;
+    for (const b of G.bugs) { const d = Math.hypot(b.x + 2.5 - x, b.y + 2 - y); if (d < bd) { bd = d; best = b; } }
+    if (best) {
+      G.bugs.splice(G.bugs.indexOf(best), 1); G.score++;
+      U.particles.push({ kind: 'spark', x: best.x, y: best.y, vx: 0, vy: -4, life: 0.4 });
+      beep(880 + G.score * 20, 0.06); buzz(12);
+    }
+    return;
+  }
+  if (S.dead) return;
+  if (stageOf() === 'egg') { U.wobbleUntil = performance.now() + 600; beep(500, 0.05); return; }
+  const b = U.box;
+  if (b && x >= b.x - 4 && x <= b.x + b.w + 4 && y >= b.y - 4 && y <= b.y + b.h + 4) {
+    if (S.asleep) { say('shhh... está dormido.'); return; }
+    animate('happy', 1100); burst('heart', 2); beep(988, 0.06); buzz(15);
+    if (Date.now() - U.lastPet > 30000) { S.happy += 3; clampStats(); U.lastPet = Date.now(); }
+    if (Math.random() < 0.4) say(pick(['jeje, cosquillas', `${N()} te quiere`, '<3 <3 <3']));
+  }
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn || btn.disabled) return;
+  ensureAudio(); buzz(10);
+  ACTIONS[btn.dataset.act]();
+  clampStats(); save(); refreshUI();
+});
+
+$('#help-close').addEventListener('click', () => { $('#help').hidden = true; });
+$('#help').addEventListener('click', e => { if (e.target.id === 'help') $('#help').hidden = true; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#help').hidden = true; });
+
+$('#sound').addEventListener('click', () => {
+  S.muted = !S.muted; save(); drawSoundIcon();
+  if (!S.muted) beep(660);
+});
+function drawSoundIcon() {
+  iconCanvas($('#sound-icon'), S.muted ? SP.spkOff : SP.spk, 18);
+  $('#sound').setAttribute('aria-pressed', String(!S.muted));
+  $('#sound').setAttribute('aria-label', S.muted ? 'Sonido apagado' : 'Sonido encendido');
+}
+
+const nameBtn = $('#name-btn'), nameInput = $('#name-input');
+nameBtn.addEventListener('click', () => {
+  nameInput.value = S.name; nameBtn.hidden = true; nameInput.hidden = false; nameInput.focus(); nameInput.select();
+});
+function commitName() {
+  if (nameInput.hidden) return;
+  const n = nameInput.value.trim().slice(0, 14);
+  if (n) S.name = n;
+  nameInput.hidden = true; nameBtn.hidden = false; save(); refreshUI();
+}
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') commitName(); if (e.key === 'Escape') { nameInput.value = S.name; commitName(); } });
+nameInput.addEventListener('blur', commitName);
+
+/* ---------- UI ---------- */
+const METERS = [['hunger', 'Panza'], ['happy', 'Ánimo'], ['energy', 'Energía'], ['hygiene', 'Higiene'], ['health', 'Salud']];
+const meterEls = {};
+for (const [k, label] of METERS) {
+  const row = document.createElement('div');
+  row.className = 'meter';
+  row.innerHTML = `<span class="label">${label}</span><span class="bar">${'<i></i>'.repeat(10)}</span><span class="val"></span>`;
+  row.setAttribute('role', 'meter'); row.setAttribute('aria-label', label); row.setAttribute('aria-valuemin', '0'); row.setAttribute('aria-valuemax', '100');
+  $('#meters').appendChild(row);
+  meterEls[k] = row;
+}
+function fmtAge(ms) {
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return `${Math.max(0, Math.floor(ms / 1000))} s`;
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} h ${m % 60} min`;
+  return `${Math.floor(h / 24)} d ${h % 24} h`;
+}
+function shortAge(ms) {
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return `${Math.max(0, Math.floor(ms / 1000))}s`;
+  if (m < 60) return `${m}min`;
+  if (m < 1440) return `${Math.floor(m / 60)}h`;
+  return `${Math.floor(m / 1440)}d`;
+}
+function refreshUI() {
+  const now = Date.now(), st = stageOf(now), egg = st === 'egg';
+  $('#name-text').textContent = S.name;
+  let stageText = STAGE_NAME[st];
+  if (st === 'adult' && S.form) stageText = S.form === 'pro' ? 'Pro' : 'Desvelado';
+  $('#stage').textContent = S.dead ? 'En la nube' : `${stageText} · ${shortAge(now - S.born)}`;
+  for (const [k] of METERS) {
+    const val = egg ? 100 : Math.round(S[k]);
+    const on = Math.ceil(val / 10);
+    const el = meterEls[k];
+    el.querySelectorAll('i').forEach((i, idx) => i.classList.toggle('on', idx < on));
+    el.querySelector('.val').textContent = val;
+    el.classList.toggle('low', !egg && !S.dead && val < 25);
+    el.setAttribute('aria-valuenow', String(val));
+  }
+  $('#keys').hidden = S.dead || U.menu === 'food';
+  $('#food-keys').hidden = S.dead || U.menu !== 'food';
+  $('#reborn-keys').hidden = !S.dead;
+  for (const b of document.querySelectorAll('[data-act]')) {
+    const a = b.dataset.act;
+    let dis = G.on || (egg && a !== 'help');
+    if (S.asleep && !['sleep', 'clean', 'help'].includes(a)) dis = true;
+    if (a === 'reborn') dis = false;
+    b.disabled = dis;
+  }
+  $('#sleep-label').textContent = S.asleep ? 'Despertar' : 'Dormir';
+  const attn = { feed: S.hunger < 25, play: S.happy < 25, sleep: S.energy < 20 && !S.asleep, clean: S.poops > 0, heal: S.sick };
+  for (const [a, on] of Object.entries(attn)) document.querySelector(`[data-act="${a}"]`).classList.toggle('attn', !egg && !S.dead && on);
+}
+
+/* ---------- rendering ---------- */
+function drawPet(cx, bottom, mood, t, opts = {}) {
+  const st = stageOf();
+  const def = st === 'baby' ? PET.baby : PET.big;
+  const s = st === 'adult' ? 3 : 2;
+  const cols = def.body[0].length, rows = def.body.length + def.legLen;
+  const w = cols * s, h = rows * s;
+  const x0 = Math.round(cx - w / 2), y0 = Math.round(bottom - h - (opts.lift || 0));
+  const P = (gx, gy, col) => { ctx.fillStyle = col; ctx.fillRect(x0 + gx * s, y0 + gy * s, s, s); };
+  const adult = st === 'adult';
+  let body = C.clay;
+  if (mood === 'dead') body = C.ghost;
+  else if (S.sick) body = C.sick;
+  else if (adult && S.form === 'desvelado') body = C.tired;
+
+  if (mood === 'dead') ctx.globalAlpha = 0.75;
+  def.body.forEach((row, r) => { for (let c = 0; c < row.length; c++) if (row[c] === 'X') P(c, r, body); });
+  const ph = Math.floor(t / 170) % 2;
+  def.legs.forEach((c, i) => {
+    let len = def.legLen;
+    if (opts.walking && len > 1 && i % 2 === ph) len = 1;
+    if (mood === 'dead') len = 1;
+    for (let k = 0; k < len; k++) P(c, def.body.length + k, body);
+  });
+
+  const E = C.eye, r = def.eyeRow;
+  for (const e of def.eyes) {
+    switch (mood) {
+      case 'blink': P(e, r + 1, E); break;
+      case 'happy': case 'eat': P(e - 1, r + 1, E); P(e, r, E); P(e + 1, r + 1, E); break;
+      case 'sleep': P(e - 1, r + 1, E); P(e, r + 1, E); break;
+      case 'sick': case 'dead': P(e - 1, r, E); P(e + 1, r, E); P(e, r + 1, E); P(e - 1, r + 2, E); P(e + 1, r + 2, E); break;
+      case 'sad': P(e, r, E); P(e, r + 1, E); if (Math.floor(t / 450) % 2) P(e, r + 2, C.bubble); break;
+      default: P(e, r, E); P(e, r + 1, E);
+    }
+    if (adult && S.form === 'desvelado' && mood !== 'dead' && mood !== 'sick') P(e, r + 2, C.bag);
+  }
+  if (mood === 'eat' && Math.floor(t / 160) % 2) for (const c of def.mouth) P(c, def.mouthRow, E);
+
+  if (adult && S.form === 'pro' && mood !== 'dead') {
+    for (let c = 2; c <= 11; c++) P(c, -1, C.phones);
+    for (const c of [1, 12]) { P(c, 0, C.phones); P(c, 1, C.phonesHi); P(c, 2, C.phones); }
+  }
+  if (mood === 'dead') { ctx.globalAlpha = 1; ctx.fillStyle = C.halo; ctx.fillRect(x0 + w * 0.3, y0 - s * 2, w * 0.4, 1); }
+  return { x: x0, y: y0 - (adult && S.form === 'pro' ? s : 0), w, h };
+}
+
+function drawEgg(t) {
+  const now = performance.now();
+  const age = Date.now() - S.born;
+  const cracking = age > EGG_MS - 15000;
+  let dx = 0;
+  if (now < U.wobbleUntil || (cracking && Math.floor(t / 300) % 4 === 0)) dx = Math.floor(t / 90) % 2 ? 1 : -1;
+  const s = 3, x = W / 2 - (SP.egg.w * s) / 2 + dx, y = FLOOR - SP.egg.h * s;
+  drawSprite(SP.egg, x, y, s);
+  if (cracking) {
+    ctx.fillStyle = C.eye;
+    [[1, 4], [2, 5], [3, 4], [4, 5]].forEach(([c, r]) => ctx.fillRect(Math.round(x) + c * s, y + r * s, s, 1));
+  }
+  U.box = { x, y, w: SP.egg.w * s, h: SP.egg.h * s };
+}
+
+function currentMood(t) {
+  if (S.dead) return 'dead';
+  if (U.anim && t < U.animUntil) return U.anim;
+  if (G.on) return 'happy';
+  if (S.asleep) return 'sleep';
+  if (S.sick) return 'sick';
+  if (S.hunger < 25 || S.happy < 25 || S.hygiene < 25) return 'sad';
+  return (t % 3900) < 150 ? 'blink' : 'idle';
+}
+
+function update(dt, t) {
+  const st = stageOf();
+  const busy = S.dead || S.asleep || st === 'egg' || G.on || (U.anim && t < U.animUntil) || (U.food && t < U.food.until) || S.sick;
+  U.walking = false;
+  if (G.on) { U.target = 20; }
+  if (!busy || G.on) {
+    if (U.pause > 0 && !G.on) U.pause -= dt;
+    else {
+      const d = U.target - U.px;
+      if (Math.abs(d) < 0.5) { U.pause = rand(1.2, 4); U.target = rand(22, W - 22); }
+      else { U.px += Math.sign(d) * Math.min(Math.abs(d), 10 * dt); U.walking = true; }
+    }
+  }
+  if (G.on) updateGame(t, dt);
+  if (S.asleep && t > U.zNext && U.box) {
+    U.particles.push({ kind: 'z', x: U.box.x + U.box.w - 4, y: U.box.y - 2, vx: 4, vy: -6, life: 2.2 });
+    U.zNext = t + 1100;
+  }
+  for (const p of U.particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
+  U.particles = U.particles.filter(p => p.life > 0);
+}
+
+function render(t) {
+  ctx.fillStyle = C.screen; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = C.grid;
+  for (let y = 2; y < H; y += 4) for (let x = 2; x < W; x += 4) ctx.fillRect(x, y, 1, 1);
+  for (let x = 0; x < W; x += 3) ctx.fillRect(x, FLOOR, 2, 1);
+
+  const st = stageOf();
+  if (st === 'egg' && !S.dead) drawEgg(t);
+  else {
+    const mood = currentMood(t);
+    let lift = 0;
+    if (mood === 'happy' && !reduced) lift = Math.abs(Math.sin(t / 130)) * 4;
+    else if (mood === 'dead') lift = 8 + Math.sin(t / 600) * 2;
+    else if (!U.walking && mood === 'idle' && !reduced) lift = Math.floor(t / 600) % 2;
+    U.box = drawPet(U.px, FLOOR, mood, t, { walking: U.walking, lift });
+    if (U.food && t < U.food.until) {
+      const p = 1 - (U.food.until - t) / U.food.dur;
+      const skip = Math.floor(U.food.s.w * p);
+      if (skip < U.food.s.w) drawSprite(U.food.s, U.box.x + U.box.w + 1 - skip, FLOOR - U.food.s.h - 6, 1, skip);
+    }
+    if (S.sick && !S.dead) drawSprite(SP.skull, U.box.x + U.box.w + 2, U.box.y - 2);
+  }
+  for (let i = 0; i < S.poops; i++) {
+    const x = W - 9 - i * 9, y = FLOOR - SP.poop.h;
+    drawSprite(SP.poop, x, y);
+    if (Math.floor(t / 400 + i) % 2) { ctx.fillStyle = C.dim; ctx.fillRect(x + 1, y - 3, 1, 2); ctx.fillRect(x + 3, y - 4, 1, 2); }
+  }
+  if (G.on) {
+    for (const b of G.bugs) {
+      const left = b.life - (t - b.born);
+      if (left < 600 && Math.floor(t / 80) % 2) continue;
+      drawSprite(Math.floor(t / 150) % 2 ? SP.bugA : SP.bugB, b.x, b.y);
+    }
+    ctx.fillStyle = C.grid; ctx.fillRect(0, 0, W, 6);
+    ctx.fillStyle = C.amber; ctx.fillRect(0, 0, W * (G.end - t) / 20000, 2);
+    ctx.font = '8px VT323, monospace'; ctx.textBaseline = 'top'; ctx.fillStyle = C.ink;
+    ctx.fillText(`BUGS ${G.score}`, 2, 1.5);
+  }
+  if (S.asleep) { ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H); }
+  for (const p of U.particles) {
+    const s = { heart: SP.heart, z: SP.z, bubble: SP.bubble, spark: SP.spark }[p.kind];
+    if (s) drawSprite(s, p.x, p.y);
+  }
+  if (U.needs.length && !G.on && Math.floor(t / 500) % 2) drawSprite(SP.bang, 3, 3);
+}
+
+let lastFrame = performance.now();
+function frame(t) {
+  const dt = Math.min(0.1, (t - lastFrame) / 1000);
+  lastFrame = t;
+  update(dt, t);
+  render(t);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- clock ---------- */
+function tick(live = true) {
+  const events = advance(Date.now());
+  handleEvents(events, live);
+  const n = needs();
+  const newNeeds = n.filter(k => !U.needs.includes(k));
+  if (live && newNeeds.length && !events.length) { say(NEED_TEXT[newNeeds[0]]()); beep(440, 0.08); beep(440, 0.08, 0.15); buzz(40); }
+  U.needs = n;
+  if (live && !G.on && !S.dead && Date.now() - U.lastSay > 28000) {
+    if (S.asleep) say(pick(['zzz...', 'zzz... refactorizando sueños', 'zzz... ñam...']));
+    else if (stageOf() === 'egg') say('el huevo se mueve... tócalo.');
+    else if (!n.length) say(pick(CHATTER)());
+    else say(NEED_TEXT[n[0]]());
+  }
+  refreshUI();
+}
+
+/* ---------- boot ---------- */
+document.querySelectorAll('canvas[data-icon]').forEach(c => iconCanvas(c, SP[c.dataset.icon]));
+drawSoundIcon();
+const away = Date.now() - S.lastTick;
+const bootEvents = advance(Date.now());
+U.needs = needs();
+handleEvents(bootEvents, false);
+if (!S.dead) {
+  if (stageOf() === 'egg') say(away > 5000 ? 'el huevo sigue calientito.' : 'Un huevo. Tócalo, se mueve.');
+  else if (away > 120000) {
+    const poops = bootEvents.filter(e => e === 'poop').length;
+    say(`Volviste después de ${fmtAge(away)}.` + (poops ? ` Hubo ${poops} popó${poops > 1 ? 's' : ''}.` : '') + (U.needs.length ? ' ' + NEED_TEXT[U.needs[0]]() : ` ${N()} te extrañó.`));
+  } else say(`hola de nuevo, ${N()} te estaba esperando.`);
+}
+refreshUI();
+save();
+setInterval(() => { tick(true); }, 1000);
+setInterval(save, 5000);
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else tick(true); });
+addEventListener('pagehide', save);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
