@@ -48,7 +48,7 @@ Si la salud llega a 0, Claudsito "se va a la nube" y puedes empezar con un huevo
 ## Cómo jugarlo en el cel
 
 1. En GitHub, ve a **Settings → Pages**.
-2. En **Source** elige *Deploy from a branch*, la rama del juego y la carpeta `/ (root)`.
+2. En **Source** elige *Deploy from a branch*. En **Branch** elige `main` y la carpeta `/ (root)`, y toca **Save**.
 3. Abre `https://rikikiriki2.github.io/Claudsito-tamagochi/` en el cel.
 4. Usa *Agregar a pantalla de inicio* para que se abra como app.
 
