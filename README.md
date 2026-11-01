@@ -20,9 +20,27 @@ Bajan con el tiempo real, aunque cierres la app. Al volver, el juego calcula lo 
 
 ### Acciones
 
-- **Comer → Comida**: +30 panza. Entre 15 y 35 minutos después hace popó. Si ya está lleno, no come.
-- **Comer → Galleta**: +15 ánimo, +8 panza. Si come 3 galletas en una hora, tiene 50% de probabilidad de enfermarse.
-- **Jugar (Caza bugs)**: minijuego de 20 segundos. Toca los bugs antes de que se escapen. Ánimo +6 más 4 por bug (máximo +40). Cuesta energía y panza. No se puede jugar enfermo ni muy cansado.
+- **Comer**: 8 comidas, cada una con su efecto:
+
+  | Comida      | Efecto                                   | ¿Hace popó? |
+  |-------------|------------------------------------------|-------------|
+  | Hamburguesa | +30 panza                                | Sí          |
+  | Taco        | +20 panza, +5 ánimo                      | Sí          |
+  | Elote       | +15 panza, +8 ánimo                      | Sí          |
+  | Manzana     | +12 panza, +4 salud                      | No          |
+  | Sopa        | +18 panza, +6 salud                      | Sí          |
+  | Café        | +20 energía, +3 ánimo, −2 salud          | No          |
+  | Galleta     | +8 panza, +15 ánimo (dulce)              | No          |
+  | Concha      | +12 panza, +20 ánimo (dulce)             | No          |
+
+  - La popó llega entre 15 y 35 minutos después de comer.
+  - Si está lleno no come, y si tiene mucha energía no toma café.
+  - 3 dulces en una hora: 50% de probabilidad de enfermarse.
+  - La misma comida 3 veces seguidas lo aburre (−8 ánimo).
+  - Cada Claudsito tiene una **comida favorita** secreta (+12 ánimo extra). Cuando la descubres aparece en el Manual.
+- **Jugar**: dos minijuegos. Cuestan energía y panza, y no se puede jugar enfermo ni muy cansado.
+  - **Caza bugs** (20 s): toca los bugs antes de que se escapen. Ánimo +6 más 4 por bug (máximo +40).
+  - **Lluvia de tokens** (30 s): arrastra el dedo para mover a Claudsito, atrapa tokens y esquiva bugs. 3 vidas. Ánimo +6 más 2 por token (máximo +40).
 - **Dormir**: apaga la luz y recarga energía. Se despierta solo con la pila llena. Si lo despiertas antes de tiempo, se enoja.
 - **Limpiar**: quita las popós y deja la higiene en 100.
 - **Curar**: medicina cuando aparece la calavera. Si no está enfermo, no hace nada.
@@ -43,7 +61,7 @@ Cada vez que una barra llega a 0 cuenta como **descuido**. Al volverse adulto:
 
 ### Fin del juego
 
-Si la salud llega a 0, Claudsito "se va a la nube" y puedes empezar con un huevo nuevo. Se conservan el nombre y el récord del minijuego.
+Si la salud llega a 0, Claudsito "se va a la nube" y puedes empezar con un huevo nuevo. Se conservan el nombre y los récords de los minijuegos.
 
 ## Cómo jugarlo en el cel
 
